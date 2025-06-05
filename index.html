@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Leaflet テキスト配置</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    #map {
+      height: 100vh;
+    }
+    .leaflet-control-custom {
+      background-color: white;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: bold;
+      border: 1px solid #888;
+      border-radius: 4px;
+    }
+    .text-label {
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      cursor: move;
+      text-align: center;
+      transform: translate(-50%, -50%);
+      position: absolute;
+      line-height: 1.2;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([35.6812, 139.7671], 13); // 東京駅付近
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // ドラッグ可能なテキストを追加するコントロール
+    const AddTextControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        const button = L.DomUtil.create('div', 'leaflet-control-custom');
+        button.innerHTML = 'テキスト追加';
+        button.onclick = function () {
+          const text = prompt('表示するテキストを入力してください:');
+          if (!text) return;
+
+          const fontSize = parseInt(prompt('文字サイズ(px):', '16')) || 16;
+
+          const textIcon = L.divIcon({
+            className: '',
+            html: `<div class="text-label" style="font-size: ${fontSize}px;">${text}</div>`,
+            iconSize: null,
+            iconAnchor: [0, 0]
+          });
+
+          const marker = L.marker(map.getCenter(), {
+            icon: textIcon,
+            draggable: true
+          }).addTo(map);
+
+          // 右クリックで削除
+          marker.on('contextmenu', () => {
+            if (confirm('このテキストを削除しますか？')) {
+              map.removeLayer(marker);
+            }
+          });
+        };
+        return button;
+      }
+    });
+    
+    // コントロールをマップに追加
+    map.addControl(new AddTextControl());
+  </script>
+</body>
+</html>
